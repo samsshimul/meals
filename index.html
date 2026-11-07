@@ -11,7 +11,7 @@
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <link rel="icon" type="image/png" href="favicon.png">
-<script src="config.js?v=202611080137"></script>
+<script src="config.js?v=202611080300"></script>
 
 <title>52/8 Accounts</title>
 <style>
@@ -877,10 +877,7 @@ function vDashboard(){
   h+=`<div class="grid g2">
    <div class="card"><h2>Who pays, who receives</h2><p class="sub">What is still left after meals, bills, dues and payments already made. <span class="pos">Blue = will receive (${esc(L().receive)})</span>, <span class="neg">red = needs to pay (${esc(L().pay)})</span>.</p><div class="chart" id="chNet"></div></div>
    <div class="card"><h2>Bazar spent vs meal cost</h2><p class="sub">If you bought more bazar than you ate, you are in plus.</p><div class="legend"><span><i style="background:var(--blue)"></i>Bazar spent</span><span><i style="background:var(--orange)"></i>Meal cost (meals \u00d7 rate)</span></div><div class="chart" id="chBvc"></div></div>
-   <div class="card"><h2>Meals per day</h2><p class="sub">Total meals of the house each day. Hover or tap a bar.</p><div class="chart" id="chDaily"></div></div>
-   <div class="card"><h2>Meal rate through the month</h2><p class="sub">Running rate = bazar so far \u00f7 meals so far (starts once enough meals are counted).</p><div class="chart" id="chRun"></div></div>
   </div>`;
-  if(allMonthKeys().length>1)h+=`<div class="card" style="margin-top:14px"><h2>Meal rate by month</h2><p class="sub">How the rate has moved over time.</p><div class="chart" id="chTrend"></div></div>`;
   h+=`<div class="card" style="margin-top:14px"><div class="rowflex"><h2>Member summary</h2><span class="spacer"></span><span class="muted small">${monthLabel(ui.month)}</span></div><div class="scroll" style="margin-top:8px"><table class="t"><thead><tr><th>Member</th><th>Meals</th><th>Bazar</th><th>Meal cost</th><th>Meal +/\u2212</th><th>Bills</th><th>Dues</th><th>Month total</th><th>Paid</th><th>Still due</th><th>Status</th></tr></thead><tbody>`+
     C.rows.map(r=>`<tr class="${r.id===ui.me?'me':''}"><td><span class="rowflex" style="flex-wrap:nowrap;gap:8px">${avatar(r.id,26)}<b>${esc(r.name)}</b></span>${r.id===S().managerId?' <span class="muted small">(manager)</span>':''}</td><td>${num(r.meals)}</td><td>${num(r.bazar)}</td><td>${num(r.cost)}</td><td class="${r.mealBal>=0?'pos':'neg'}">${r.mealBal>=0?'+':''}${num(r.mealBal)}</td><td>${r.bills?'\u2212'+num(r.bills):'0'}</td><td>${r.dueIn-r.dueOut?(r.dueIn-r.dueOut>0?'+':'\u2212')+num(Math.abs(r.dueIn-r.dueOut)):'0'}</td><td class="${r.net>=0?'pos':'neg'}">${r.net>=0?'+':'\u2212'}${num(Math.abs(r.net))}</td><td>${r.paid?num(r.paid):'<span class="muted">\u2013</span>'}</td><td class="${dueCls(r)}"><b>${r.settled?'\u2713 0':(r.due<0?'\u2212':'+')+num(Math.abs(r.due))}</b></td><td>${pillFor(r)}</td></tr>`).join('')+
     `</tbody><tfoot><tr><td>Total</td><td>${num(C.totalMeals)}</td><td>${num(C.totalBazar)}</td><td>${num(C.totalBazar)}</td><td>0</td><td>${num(sum(C.rows.map(r=>r.bills)))}</td><td></td><td></td><td>${num(sum(C.rows.map(r=>r.paid)))}</td><td></td><td></td></tr></tfoot></table></div></div>`;
