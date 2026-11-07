@@ -11,7 +11,7 @@
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <link rel="icon" type="image/png" href="favicon.png">
-<script src="config.js?v=202611080300"></script>
+<script src="config.js?v=202611080349"></script>
 
 <title>52/8 Accounts</title>
 <style>
@@ -953,14 +953,10 @@ function vBazar(){
       h+=`<div class="blogr fade-up">${who==='all'?`<b class="bwho">${esc(nameOf(e.m))}</b>`:''}<div class="bitems">${(e.items||[]).length?(e.items.map(x=>`<span class="itag">${esc(x.n)}${x.a?` <i>${num(x.a)}</i>`:''}</span>`).join('')):''}${e.note?`<span class="muted small">${esc(e.note)}</span>`:''}${!(e.items||[]).length&&!e.note?'<span class="muted small">No item details</span>':''}</div><b class="bamt">${money(e.amt)}</b>${ed?`<button class="btn sm" data-act="bzEdit" data-id="${e.id}">Edit</button><button class="btn sm danger" data-act="bzDel" data-id="${e.id}">\u2715</button>`:''}</div>`});
     h+='</div>'}
   h+='</div>';
-  // per member cards + top items
-  h+=`<div class="grid g2" style="margin-bottom:14px"><div class="card"><h2>Who did bazar</h2><p class="sub">Total spent and number of bazar trips.</p>`+
+  // who did bazar
+  h+=`<div class="card" style="margin-bottom:14px"><h2>Who did bazar</h2><p class="sub">Total spent and number of bazar trips.</p>`+
     [...C.rows].sort((a,b)=>b.bazar-a.bazar).map(r=>{const n=M.bazarLog.filter(e=>e.m===r.id).length,w=C.totalBazar?r.bazar/Math.max(...C.rows.map(x=>x.bazar))*100:0;
       return`<div class="whorow"><b class="rowflex" style="flex-wrap:nowrap;gap:6px">${avatar(r.id,22)}${esc(r.name)}</b><div class="whobar"><i class="anim-grow" style="width:${w}%"></i></div><span>${money(r.bazar)}</span><small class="muted">${n} trip${n===1?'':'s'}</small></div>`}).join('')+`</div>`;
-  const it={};M.bazarLog.forEach(e=>(e.items||[]).forEach(x=>{const o=it[x.n]=it[x.n]||{n:0,a:0};o.n++;o.a+=+x.a||0}));
-  const top=Object.keys(it).sort((a,b)=>(it[b].a-it[a].a)||(it[b].n-it[a].n)).slice(0,10);const anyAmt=top.some(k=>it[k].a);const mx=Math.max(1,...top.map(k=>anyAmt?it[k].a:it[k].n));
-  h+=`<div class="card"><h2>What we bought most</h2><p class="sub">${anyAmt?'By money spent (where item prices were entered).':'By how many times it was bought.'}</p>`+
-    (top.length?top.map(k=>`<div class="whorow"><b>${esc(k)}</b><div class="whobar"><i class="anim-grow" style="width:${(anyAmt?it[k].a:it[k].n)/mx*100}%;background:var(--orange)"></i></div><span>${anyAmt?money(it[k].a):''}</span><small class="muted">${it[k].n}\u00d7</small></div>`).join(''):'<p class="muted small">Items will show here once bazar entries include items.</p>')+`</div></div>`;
   h+=vSheet('bazar');
   return h;
 }
