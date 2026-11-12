@@ -11,7 +11,7 @@
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <link rel="icon" type="image/png" href="favicon.png">
-<script src="config.js?v=202611121218"></script>
+<script src="config.js?v=202611122140"></script>
 
 <title>52/8 Accounts</title>
 <style>
@@ -341,7 +341,10 @@ input.in:focus,select.in:focus,textarea.in:focus{outline:2px solid var(--blue);o
   .rep-kpis b{font-size:clamp(15px,4.6vw,20px);white-space:nowrap}
 }
 
-.whoq .whosel select{font-size:18px;font-weight:700;padding:10px 16px;min-width:220px;border:2px solid var(--accent,#7b3fc4);border-radius:12px;text-align:center}
+.whoq{border:2.5px solid var(--accent)!important;box-shadow:0 6px 24px color-mix(in srgb,var(--accent) 22%,transparent)!important}
+.whoq .whot{font-size:24px;font-weight:800;letter-spacing:.2px}
+.whoq .whosel{display:flex;justify-content:center}
+.whoq .whosel select{font-size:20px!important;font-weight:800!important;padding:12px 18px!important;width:min(100%,300px)!important;border:2.5px solid var(--accent)!important;border-radius:14px!important;text-align:center;text-align-last:center;background:var(--surface,#fff);color:var(--accent)}
 </style>
 </head>
 <body>
@@ -402,6 +405,7 @@ function toast(msg,ms=2200){const t=$('#toast');t.textContent=msg;t.style.opacit
 /* ===================== API (Google Apps Script or preview) ===================== */
 const IS_GAS=typeof google!=='undefined'&&google.script&&google.script.run;
 /* The installable phone app (hosted outside Google) talks to the same Google script through a small JSON API. */
+const APP_VERSION='2026-11-12 21:40';
 const API_URL=(typeof window!=='undefined'&&window.MM_API)||'';
 const REMOTE=!IS_GAS&&!!API_URL;
 const READ_ONLY_FN=/^api(Get|WhoAmI|AdminInfo|ListMods|BookingLinks)/;
@@ -874,8 +878,8 @@ function vDashboard(){
     <div class="card kpi"><div class="lab">Still to collect</div><div class="val neg">${money(C.leftCollect)}</div><div class="hint">of ${money(C.toCollect)} \u00b7 collected ${money(C.collected)}</div></div>
     <div class="card kpi"><div class="lab">Still to pay out</div><div class="val pos">${money(C.leftPay)}</div><div class="hint">of ${money(C.toPay)} \u00b7 paid ${money(C.paidOut)}</div></div></div>`;
   // me
-  if(me)h+=`<div class="card" style="margin-bottom:14px"><div class="rowflex" style="margin-bottom:6px"><h2>My month</h2><span class="spacer"></span>${memberSelect(C,ui.me,'setMe')}</div>${vStatement(me,C)}</div>`;
-  else h+=whoAreYou(C,'see your own bill breakdown');
+  h+=whoAreYou(C,'see your own bill breakdown',ui.me);
+  if(me)h+=`<div class="card" style="margin-bottom:14px"><div class="rowflex" style="margin-bottom:6px"><h2>My month \u00b7 ${esc(me.name)}</h2></div>${vStatement(me,C)}</div>`;
   h+=`<div class="grid g2">
    <div class="card"><h2>Who pays, who receives</h2><p class="sub">What is still left after meals, bills, dues and payments already made. <span class="pos">Blue = will receive (${esc(L().receive)})</span>, <span class="neg">red = needs to pay (${esc(L().pay)})</span>.</p><div class="chart" id="chNet"></div></div>
    <div class="card"><h2>Bazar spent vs meal cost</h2><p class="sub">If you bought more bazar than you ate, you are in plus.</p><div class="legend"><span><i style="background:var(--blue)"></i>Bazar spent</span><span><i style="background:var(--orange)"></i>Meal cost (meals \u00d7 rate)</span></div><div class="chart" id="chBvc"></div></div>
@@ -917,9 +921,9 @@ function scrollStrip(){const s=$('#daystrip'),b=s&&$('.dayb.on',s);if(b)s.scroll
 
 /* ---------- Meals tab ---------- */
 /* big, centered "Who are you?" question used on Dashboard and Meals */
-function whoAreYou(C,why){return`<div class="card whoq" style="margin-bottom:14px;text-align:center;border:2px solid var(--accent,#7b3fc4)"><div style="font-size:22px;font-weight:800;margin-bottom:4px">\ud83d\udc64 Who are you?</div><div class="muted" style="margin-bottom:12px">Pick your name to ${why} (saved on this device).</div>
-  <div class="whosel" style="display:flex;justify-content:center">${memberSelect(C,'','setMe')}</div></div>`}
-function vMeals(){
+function whoAreYou(C,why,val){val=C.ids.includes(val)?val:'';return`<div class="card whoq" style="margin-bottom:14px;text-align:center"><div class="whot">\ud83d\udc64 Who are you?</div><div class="muted" style="margin:2px 0 12px">${val?`Showing <b style="color:var(--ink,#111)">${esc(nameOf(val))}</b>. Not you? Pick your name below.`:`Pick your name to ${why} (saved on this device).`}</div>
+  <div class="whosel">${memberSelect(C,val,'setMe')}</div></div>`}
+  function vMeals(){
   const C=compute(ui.month),M=C.M,ed=editable('meals');let h='';
   if(ed){if(!ui.qeDay||ui.qeDay>C.days)ui.qeDay=dayDefault();const d=ui.qeDay,i=d-1;
     h+=`<div class="card" style="margin-bottom:14px"><div class="rowflex"><h2>Daily meal entry</h2><span class="spacer"></span><span class="muted small">Saves automatically</span></div>
@@ -929,7 +933,8 @@ function vMeals(){
       <div class="mealrows">`+C.ids.map(id=>{const v=M.meals[id][i];const sr=srcOf(M,id,i),bk0=bkGet(ui.month+'-'+pad2(d),id);return`<div class="mealrow"><b class="rowflex" style="flex-wrap:nowrap;gap:8px">${avatar(id,30)}<span>${esc(nameOf(id))}<small class="mstat">${srcBadge(sr)}${bk0&&!(sr&&sr.s!=='book')?' \u00b7 booked '+esc(choiceTxt(bk0)):''}</small></span></b><div class="qchips">${mealChips().map(q=>`<button class="q ${v===q?'on':''}" data-act="mealSet" data-id="${id}" data-v="${q}">${q}</button>`).join('')}</div>
         <div class="stepper"><button data-act="step" data-id="${id}" data-v="-0.25" aria-label="Minus a quarter">\u2212</button><input type="number" step="0.25" min="0" inputmode="decimal" data-cell="meals|${id}|${i}" value="${v||''}" placeholder="0"><button data-act="step" data-id="${id}" data-v="0.25" aria-label="Plus a quarter">+</button></div></div>`}).join('')+`</div></div>`}
   // member calendar
-  if(!C.ids.includes(ui.mealWho)&&!C.ids.includes(ui.me)){h+=whoAreYou(C,'see your own meal calendar');h+=vSheet('meals');return h}
+  h+=whoAreYou(C,'see your own meal calendar',ui.me);
+  if(!C.ids.includes(ui.me)&&!C.ids.includes(ui.mealWho)){h+=vSheet('meals');return h}
   let who=ui.mealWho;if(!C.ids.includes(who))who=ui.me;
   const r=C.rows.find(x=>x.id===who),arr=M.meals[who],max=Math.max(1,...arr),days=arr.filter(v=>v>0).length;
   const first=(dayDate(ui.month,1).getDay()+1)%7; // Saturday first
@@ -1380,6 +1385,7 @@ function render(){
   if(ui.tab==='admin'&&(can('backup')||can('settings')||can('reports'))&&!ui.info&&!ui._infoLoading){ui._infoLoading=1;loadAdminInfo().finally(()=>ui._infoLoading=0)}
   if(ui.tab==='admin'&&isOwner()&&!ui.mods&&!ui._modsLoading){ui._modsLoading=1;loadMods().finally(()=>ui._modsLoading=0)}
   if(ui.tab==='admin'&&can('log')&&!ui.log&&!ui._logLoading){ui._logLoading=1;loadLog().finally(()=>ui._logLoading=0)}
+  h+=`<div class="muted small" style="text-align:center;margin:26px 0 6px;opacity:.65">52/8 Accounts \u00b7 version ${APP_VERSION}</div>`;
   v.innerHTML=h;drawCharts();animateCounts();scrollStrip();
 }
 function route(){const t=(location.hash||'').slice(1);ui.tab=['dashboard','book','meals','bazar','bills','settle','report','admin'].includes(t)?t:'dashboard';render()}
@@ -1422,7 +1428,7 @@ document.addEventListener('change',async e=>{
   const t=e.target,M=curMonth();
   if(t.dataset.act==='bkUsual'){try{await api.setUsual(ui.btoken,t.value);DB.settings.booking=DB.settings.booking||{};DB.settings.booking.usual=DB.settings.booking.usual||{};DB.settings.booking.usual[ui.bme.id]=t.value;render();toast('Usual plan: '+usualName(t.value))}catch(err){handleErr(err)}return}
   if(t.dataset.act==='bkStaffUsual'){try{await api.staffUsual(ui.token,t.dataset.id,t.value);DB.settings.booking=DB.settings.booking||{};DB.settings.booking.usual=DB.settings.booking.usual||{};DB.settings.booking.usual[t.dataset.id]=t.value;render();toast(nameOf(t.dataset.id)+': '+usualName(t.value))}catch(err){handleErr(err)}return}
-  if(t.dataset.act==='setMe'){ui.me=t.value;LS.set('me',ui.me);render();return}
+  if(t.dataset.act==='setMe'){ui.me=t.value;ui.mealWho=t.value;LS.set('me',ui.me);render();return}
   if(t.dataset.shareOn){const[bi,id]=t.dataset.shareOn.split('|');const b=M.bills[+bi];b.shares=b.shares||{};if(t.checked)b.shares[id]=b.shares[id]||0;else delete b.shares[id];queueSave('month');render();return}
   if(t.dataset.bill&&t.type==='checkbox'){const[bi,k]=t.dataset.bill.split('|');M.bills[+bi][k]=t.checked;queueSave('month');render();return}
   if(t.dataset.due&&t.tagName==='SELECT'){const[i,k]=t.dataset.due.split('|');M.dues[+i][k]=t.value;queueSave('month');return}
@@ -1621,7 +1627,20 @@ function setupInstall(){
       $('#cpLink',bg).onclick=()=>copyText(location.origin+location.pathname);$('#okInst',bg).onclick=closeModal});
   };
 }
-if(REMOTE&&'serviceWorker' in navigator)addEventListener('load',()=>{navigator.serviceWorker.register('sw.js').catch(()=>{})});
+if(REMOTE&&'serviceWorker' in navigator)addEventListener('load',()=>{navigator.serviceWorker.register('sw.js',{updateViaCache:'none'}).catch(()=>{})});
+/* phone app: if a newer version is online, switch to it straight away (no reinstall needed) */
+async function checkAppUpdate(){
+  if(!REMOTE)return;
+  try{const r=await fetch('index.html?u='+Date.now(),{cache:'no-store'});const t=await r.text();const m=/APP_VERSION='([^']+)'/.exec(t);
+    if(!m||m[1]===APP_VERSION||m[1].indexOf('__')===0)return;
+    if(sessionStorage.getItem('mm_upd')===m[1])return;sessionStorage.setItem('mm_upd',m[1]);
+    toast('Updating the app\u2026',3000);
+    try{if(window.caches)for(const k of await caches.keys())await caches.delete(k)}catch(e){}
+    try{const rg=await navigator.serviceWorker.getRegistration();if(rg)await rg.update()}catch(e){}
+    setTimeout(()=>location.reload(),600);
+  }catch(e){}
+}
+if(REMOTE){addEventListener('load',()=>setTimeout(checkAppUpdate,1500));document.addEventListener('visibilitychange',()=>{if(!document.hidden)checkAppUpdate()})}
 
 /* ===================== Boot ===================== */
 setupInstall();
