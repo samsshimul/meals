@@ -11,7 +11,7 @@
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <link rel="icon" type="image/png" href="favicon.png">
-<script src="config.js?v=202611122140"></script>
+<script src="config.js?v=202611122233"></script>
 
 <title>52/8 Accounts</title>
 <style>
@@ -405,7 +405,7 @@ function toast(msg,ms=2200){const t=$('#toast');t.textContent=msg;t.style.opacit
 /* ===================== API (Google Apps Script or preview) ===================== */
 const IS_GAS=typeof google!=='undefined'&&google.script&&google.script.run;
 /* The installable phone app (hosted outside Google) talks to the same Google script through a small JSON API. */
-const APP_VERSION='2026-11-12 21:40';
+const APP_VERSION='2026-11-12 22:33';
 const API_URL=(typeof window!=='undefined'&&window.MM_API)||'';
 const REMOTE=!IS_GAS&&!!API_URL;
 const READ_ONLY_FN=/^api(Get|WhoAmI|AdminInfo|ListMods|BookingLinks)/;
@@ -512,7 +512,7 @@ const api=(IS_GAS||REMOTE)?{
 
 /* ===================== State ===================== */
 let DB={members:[],settings:{},months:{},updatedAt:0};
-const ui={loadedAt:Date.now(),tab:'dashboard',month:null,token:LS.get('token',null),me:LS.get('me',''),qeDay:null,bzDay:null,theme:LS.get('theme',null)};
+const ui={loadedAt:Date.now(),tab:'dashboard',month:null,token:LS.get('token',null),me:'',qeDay:null,bzDay:null,theme:LS.get('theme',null)};
 const isAdmin=()=>!!ui.token&&ui.role==='owner';
 const S=()=>DB.settings||{};
 const L=()=>Object.assign({receive:'pabe',pay:'dibe'},S().labels||{});
@@ -921,7 +921,7 @@ function scrollStrip(){const s=$('#daystrip'),b=s&&$('.dayb.on',s);if(b)s.scroll
 
 /* ---------- Meals tab ---------- */
 /* big, centered "Who are you?" question used on Dashboard and Meals */
-function whoAreYou(C,why,val){val=C.ids.includes(val)?val:'';return`<div class="card whoq" style="margin-bottom:14px;text-align:center"><div class="whot">\ud83d\udc64 Who are you?</div><div class="muted" style="margin:2px 0 12px">${val?`Showing <b style="color:var(--ink,#111)">${esc(nameOf(val))}</b>. Not you? Pick your name below.`:`Pick your name to ${why} (saved on this device).`}</div>
+function whoAreYou(C,why,val){val=C.ids.includes(val)?val:'';return`<div class="card whoq" style="margin-bottom:14px;text-align:center"><div class="whot">\ud83d\udc64 Who are you?</div><div class="muted" style="margin:2px 0 12px">${val?`Showing <b style="color:var(--ink,#111)">${esc(nameOf(val))}</b>. Not you? Pick your name below.`:`Pick your name to ${why}.`}</div>
   <div class="whosel">${memberSelect(C,val,'setMe')}</div></div>`}
   function vMeals(){
   const C=compute(ui.month),M=C.M,ed=editable('meals');let h='';
@@ -934,7 +934,7 @@ function whoAreYou(C,why,val){val=C.ids.includes(val)?val:'';return`<div class="
         <div class="stepper"><button data-act="step" data-id="${id}" data-v="-0.25" aria-label="Minus a quarter">\u2212</button><input type="number" step="0.25" min="0" inputmode="decimal" data-cell="meals|${id}|${i}" value="${v||''}" placeholder="0"><button data-act="step" data-id="${id}" data-v="0.25" aria-label="Plus a quarter">+</button></div></div>`}).join('')+`</div></div>`}
   // member calendar
   h+=whoAreYou(C,'see your own meal calendar',ui.me);
-  if(!C.ids.includes(ui.me)&&!C.ids.includes(ui.mealWho)){h+=vSheet('meals');return h}
+  if(!C.ids.includes(ui.me)){h+=vSheet('meals');return h}
   let who=ui.mealWho;if(!C.ids.includes(who))who=ui.me;
   const r=C.rows.find(x=>x.id===who),arr=M.meals[who],max=Math.max(1,...arr),days=arr.filter(v=>v>0).length;
   const first=(dayDate(ui.month,1).getDay()+1)%7; // Saturday first
@@ -1356,12 +1356,11 @@ function vBookSend(tom){
 function bkGroupText(tom){const L4=ui.bkLinks||{},bs=bookSet();return'*\ud83c\udf7d\ufe0f Tomorrow\'s meals \u00b7 '+bkLabel(tom)+'*\nTap your link and choose lunch / dinner by *'+cutLabel(bs.cutoffHour)+'*.\nNo answer = no meal (0).\n\n'+DB.members.filter(m=>m.active!==false&&L4[m.id]).map(m=>'\ud83d\udc64 '+m.name+': '+L4[m.id]).join('\n')}
 async function bkSaveMine(ds,c,via){try{setSync('busy','Saving\u2026');const r=await api.book(ui.btoken,ds,c,via||'website');DB.book=r.book;DB.updatedAt=r.updatedAt;setSync('ok','Saved');render();toast('\u2713 '+bkLabel(ds)+': '+choiceTxt(r.saved))}catch(e){handleErr(e);setSync('ok','')}}
 async function bkSaveStaff(id,ds,c){try{const r=await api.staffBook(ui.token,id,ds,c);DB.book=r.book;DB.updatedAt=r.updatedAt;await refresh(true)}catch(e){handleErr(e)}}
-async function bkIdentify(tok,quiet){try{const r=await api.whoAmI(tok);ui.btoken=tok;ui.bme={id:r.id,name:r.name};LS.set('btoken',tok);LS.set('bme',ui.bme);ui.me=r.id;LS.set('me',r.id);if(!quiet)toast('Hi '+r.name+'! This phone will remember you for meal booking.',3500);return true}catch(e){handleErr(e);return false}}
+async function bkIdentify(tok,quiet){try{const r=await api.whoAmI(tok);ui.btoken=tok;ui.bme={id:r.id,name:r.name};LS.set('btoken',tok);LS.set('bme',ui.bme);if(!quiet)toast('Hi '+r.name+'! This phone will remember you for meal booking.',3500);return true}catch(e){handleErr(e);return false}}
 
 /* ===================== Render ===================== */
 function applyTheme(){const t=ui.theme||(matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light');document.documentElement.setAttribute('data-theme',t)}
 function render(){
-  if(!ui.me&&ui.bme&&ui.bme.id){ui.me=ui.bme.id;LS.set('me',ui.me)}
   const s=S();$('#houseName').textContent=s.houseName||'House Meal Manager';
   $('#roleLine').textContent=(isOwner()?'Owner':isStaff()?'Moderator \u00b7 '+ui.staffName:'Viewer')+(IS_GAS||REMOTE?'':' \u00b7 preview');
   $('#loginBtn').textContent=isStaff()?'Log out':'Admin login';
@@ -1428,7 +1427,7 @@ document.addEventListener('change',async e=>{
   const t=e.target,M=curMonth();
   if(t.dataset.act==='bkUsual'){try{await api.setUsual(ui.btoken,t.value);DB.settings.booking=DB.settings.booking||{};DB.settings.booking.usual=DB.settings.booking.usual||{};DB.settings.booking.usual[ui.bme.id]=t.value;render();toast('Usual plan: '+usualName(t.value))}catch(err){handleErr(err)}return}
   if(t.dataset.act==='bkStaffUsual'){try{await api.staffUsual(ui.token,t.dataset.id,t.value);DB.settings.booking=DB.settings.booking||{};DB.settings.booking.usual=DB.settings.booking.usual||{};DB.settings.booking.usual[t.dataset.id]=t.value;render();toast(nameOf(t.dataset.id)+': '+usualName(t.value))}catch(err){handleErr(err)}return}
-  if(t.dataset.act==='setMe'){ui.me=t.value;ui.mealWho=t.value;LS.set('me',ui.me);render();return}
+  if(t.dataset.act==='setMe'){ui.me=t.value;ui.mealWho=t.value;render();return}
   if(t.dataset.shareOn){const[bi,id]=t.dataset.shareOn.split('|');const b=M.bills[+bi];b.shares=b.shares||{};if(t.checked)b.shares[id]=b.shares[id]||0;else delete b.shares[id];queueSave('month');render();return}
   if(t.dataset.bill&&t.type==='checkbox'){const[bi,k]=t.dataset.bill.split('|');M.bills[+bi][k]=t.checked;queueSave('month');render();return}
   if(t.dataset.due&&t.tagName==='SELECT'){const[i,k]=t.dataset.due.split('|');M.dues[+i][k]=t.value;queueSave('month');return}
@@ -1532,7 +1531,7 @@ document.addEventListener('click',async e=>{
     case'repView':ui.repView=a.dataset.v;render();scrollTo(0,0);break;
     case'repPick':ui.repMember=a.dataset.id;render();break;
     case'logout':logout();break;
-    case'pickMe':ui.me='';LS.set('me','');render();break;
+    case'pickMe':ui.me='';render();break;
     case'qeDay':{const k=a.dataset.f==='meals'?'qeDay':'bzDay';ui[k]=Math.min(daysIn(ui.month),Math.max(1,ui[k]+(+a.dataset.d)));render();break}
     case'step':{const i=ui.qeDay-1,id=a.dataset.id;M.meals[id][i]=Math.max(0,r2((M.meals[id][i]||0)+(+a.dataset.v)));queueSave('month');render();break}
     case'copyPrev':{const i=ui.qeDay-1;if(i<1)return toast('No previous day in this month');M.members.forEach(id=>M.meals[id][i]=M.meals[id][i-1]);queueSave('month');render();toast('Copied day '+i);break}
